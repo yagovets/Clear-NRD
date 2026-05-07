@@ -3,44 +3,61 @@ services:
   opensearch:
     image: opensearchproject/opensearch:2.12.0
     container_name: opensearch
+    restart: unless-stopped
+
     environment:
       - discovery.type=single-node
       - plugins.security.disabled=true
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Anatolievich_Siderenko03
       - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+
     ulimits:
       memlock:
         soft: -1
         hard: -1
+
     ports:
       - "9200:9200"
+
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+
     networks:
       - ndr_net
 
   dashboards:
     image: opensearchproject/opensearch-dashboards:2.12.0
     container_name: dashboards
+    restart: unless-stopped
+
     depends_on:
       - opensearch
-    ports:
-      - "5601:5601"
+
     environment:
       - OPENSEARCH_HOSTS=http://opensearch:9200
       - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+
     networks:
       - ndr_net
 
   nginx:
     image: nginx:1.25
     container_name: nginx
+    restart: unless-stopped
+
     depends_on:
       - dashboards
+
     ports:
-      - "8080:80"
+      - "80:80"
+
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+
     networks:
       - ndr_net
+
+volumes:
+  opensearch_data:
 
 networks:
   ndr_net:
